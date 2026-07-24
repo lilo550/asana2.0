@@ -174,6 +174,12 @@
   font-size: 0.9rem;
 }
 
+.project-card-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.project-card-edit,
 .project-card-delete {
   background: none;
   border: 1px solid transparent;
@@ -184,8 +190,43 @@
   white-space: nowrap;
 }
 
+.project-card-edit {
+  color: var(--color-primary);
+}
+
+.project-card-edit:hover {
+  border-color: var(--color-primary);
+}
+
 .project-card-delete:hover {
   border-color: var(--color-secondary);
+}
+
+.project-card-edit-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-card-edit-form input,
+.project-card-edit-form textarea {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-highlight);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.project-card-edit-form input:focus,
+.project-card-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+}
+
+.project-card-edit-actions {
+  display: flex;
+  gap: 0.6rem;
 }
 
 /* --- Fortschrittsbalken --- */
@@ -256,13 +297,33 @@
   width: 17px;
   height: 17px;
   accent-color: var(--color-secondary);
+  flex-shrink: 0;
+  margin-top: 0.15rem;
 }
 
-.task-item-done .task-item-label span {
+.task-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.task-item-description {
+  font-size: 0.82rem;
+  opacity: 0.65;
+}
+
+.task-item-done .task-item-title {
   text-decoration: line-through;
   opacity: 0.5;
 }
 
+.task-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.task-item-edit,
 .task-item-delete {
   background: none;
   border: none;
@@ -272,26 +333,63 @@
   padding: 0 0.4rem;
 }
 
+.task-item-edit:hover,
 .task-item-delete:hover {
   opacity: 1;
   color: var(--color-secondary);
 }
 
-.task-add-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+.task-item-editing {
+  align-items: stretch;
 }
 
-.task-add-form input {
+.task-item-edit-form {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-item-edit-form input,
+.task-item-edit-form textarea {
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--color-highlight);
   border-radius: 8px;
   font-size: 0.9rem;
+  resize: vertical;
 }
 
-.task-add-form input:focus {
+.task-item-edit-form input:focus,
+.task-item-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+}
+
+.task-item-edit-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.task-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.task-add-form input,
+.task-add-form textarea {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-highlight);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.task-add-form input:focus,
+.task-add-form textarea:focus {
   outline: none;
   border-color: var(--color-secondary);
 }
@@ -305,6 +403,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
+  align-self: flex-start;
 }
 
 .task-add-form button:hover {

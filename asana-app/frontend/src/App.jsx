@@ -41,12 +41,44 @@ export default function App() {
     }
   }
 
-  async function handleAddTask(projectId, title) {
+  async function handleUpdateProject(projectId, name, description) {
     try {
-      const task = await api.addTask(projectId, title);
+      const updated = await api.updateProject(projectId, { name, description });
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, ...updated } : p))
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleAddTask(projectId, title, description) {
+    try {
+      const task = await api.addTask(projectId, title, description);
       setProjects((prev) =>
         prev.map((p) =>
           p.id === projectId ? { ...p, tasks: [...p.tasks, task] } : p
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateTask(projectId, taskId, title, description) {
+    try {
+      const updatedTask = await api.updateTask(projectId, taskId, {
+        title,
+        description,
+      });
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                tasks: p.tasks.map((t) => (t.id === taskId ? updatedTask : t)),
+              }
+            : p
         )
       );
     } catch (err) {
@@ -169,7 +201,9 @@ export default function App() {
                     onToggleTask={handleToggleTask}
                     onDeleteTask={requestDeleteTask}
                     onAddTask={handleAddTask}
+                    onUpdateTask={handleUpdateTask}
                     onDeleteProject={requestDeleteProject}
+                    onUpdateProject={handleUpdateProject}
                   />
                 ))}
               </div>

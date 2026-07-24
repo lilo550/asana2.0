@@ -7,18 +7,40 @@ export default function ProjectCard({
   onToggleTask,
   onDeleteTask,
   onAddTask,
+  onUpdateTask,
   onDeleteProject,
+  onUpdateProject,
 }) {
   const [expanded, setExpanded] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(project.name);
+  const [editDescription, setEditDescription] = useState(
+    project.description || ""
+  );
 
   const doneCount = project.tasks.filter((t) => t.done).length;
 
   function handleAddTask(e) {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
-    onAddTask(project.id, newTaskTitle.trim());
+    onAddTask(project.id, newTaskTitle.trim(), newTaskDescription.trim());
     setNewTaskTitle("");
+    setNewTaskDescription("");
+  }
+
+  function startEditing() {
+    setEditName(project.name);
+    setEditDescription(project.description || "");
+    setIsEditing(true);
+  }
+
+  function handleSaveEdit(e) {
+    e.preventDefault();
+    if (!editName.trim()) return;
+    onUpdateProject(project.id, editName.trim(), editDescription.trim());
+    setIsEditing(false);
   }
 
   return (
@@ -31,19 +53,63 @@ export default function ProjectCard({
         >
           {expanded ? "▾" : "▸"}
         </button>
-        <div className="project-card-title-group">
-          <h3>{project.name}</h3>
-          {project.description && (
-            <p className="project-card-description">{project.description}</p>
-          )}
-        </div>
-        <button
-          className="project-card-delete"
-          onClick={() => onDeleteProject(project.id)}
-          title="Projekt löschen"
-        >
-          Löschen
-        </button>
+
+        {isEditing ? (
+          <form className="project-card-edit-form" onSubmit={handleSaveEdit}>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              autoFocus
+            />
+            <textarea
+              placeholder="Beschreibung (optional)"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              rows={2}
+            />
+            <div className="project-card-edit-actions">
+              <button type="submit" className="btn-primary">
+                Speichern
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setIsEditing(false)}
+              >
+                Abbrechen
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="project-card-title-group">
+            <h3>{project.name}</h3>
+            {project.description && (
+              <p className="project-card-description">
+                {project.description}
+              </p>
+            )}
+          </div>
+        )}
+
+        {!isEditing && (
+          <div className="project-card-actions">
+            <button
+              className="project-card-edit"
+              onClick={startEditing}
+              title="Projekt bearbeiten"
+            >
+              Bearbeiten
+            </button>
+            <button
+              className="project-card-delete"
+              onClick={() => onDeleteProject(project.id)}
+              title="Projekt löschen"
+            >
+              Löschen
+            </button>
+          </div>
+        )}
       </div>
 
       <ProgressBar done={doneCount} total={project.tasks.length} />
@@ -60,6 +126,9 @@ export default function ProjectCard({
                 task={task}
                 onToggle={() => onToggleTask(project.id, task.id)}
                 onDelete={() => onDeleteTask(project.id, task.id)}
+                onUpdate={(title, description) =>
+                  onUpdateTask(project.id, task.id, title, description)
+                }
               />
             ))}
           </ul>
@@ -70,6 +139,12 @@ export default function ProjectCard({
               placeholder="Neue Unteraufgabe hinzufügen…"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
+            />
+            <textarea
+              placeholder="Beschreibung (optional)"
+              value={newTaskDescription}
+              onChange={(e) => setNewTaskDescription(e.target.value)}
+              rows={1}
             />
             <button type="submit">+ Hinzufügen</button>
           </form>

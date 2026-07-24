@@ -10,9 +10,9 @@ export const projects = [
     name: "Website Relaunch",
     description: "Neugestaltung der Firmenwebsite inkl. responsivem Design.",
     tasks: [
-      { id: 1, title: "Wireframes erstellen", done: true },
-      { id: 2, title: "Design-System definieren", done: true },
-      { id: 3, title: "Frontend umsetzen", done: false },
+      { id: 1, title: "Wireframes erstellen", description: "", done: true },
+      { id: 2, title: "Design-System definieren", description: "", done: true },
+      { id: 3, title: "Frontend umsetzen", description: "", done: false },
     ],
   },
   {
@@ -20,8 +20,8 @@ export const projects = [
     name: "App-Launch Q3",
     description: "Vorbereitung und Durchfuehrung des App-Launches.",
     tasks: [
-      { id: 4, title: "App Store Eintrag vorbereiten", done: false },
-      { id: 5, title: "Marketing-Kampagne planen", done: false },
+      { id: 4, title: "App Store Eintrag vorbereiten", description: "", done: false },
+      { id: 5, title: "Marketing-Kampagne planen", description: "", done: false },
     ],
   },
 ];
@@ -45,6 +45,14 @@ export function createProject({ name, description }) {
   return project;
 }
 
+export function updateProject(id, { name, description }) {
+  const project = getProject(id);
+  if (!project) return null;
+  if (name !== undefined) project.name = name;
+  if (description !== undefined) project.description = description;
+  return project;
+}
+
 export function deleteProject(id) {
   const index = projects.findIndex((p) => p.id === id);
   if (index === -1) return false;
@@ -52,10 +60,10 @@ export function deleteProject(id) {
   return true;
 }
 
-export function addTask(projectId, title) {
+export function addTask(projectId, title, description) {
   const project = getProject(projectId);
   if (!project) return null;
-  const task = { id: nextTaskId++, title, done: false };
+  const task = { id: nextTaskId++, title, description: description || "", done: false };
   project.tasks.push(task);
   return task;
 }
@@ -66,6 +74,16 @@ export function toggleTask(projectId, taskId) {
   const task = project.tasks.find((t) => t.id === taskId);
   if (!task) return null;
   task.done = !task.done;
+  return task;
+}
+
+export function updateTask(projectId, taskId, { title, description }) {
+  const project = getProject(projectId);
+  if (!project) return null;
+  const task = project.tasks.find((t) => t.id === taskId);
+  if (!task) return null;
+  if (title !== undefined) task.title = title;
+  if (description !== undefined) task.description = description;
   return task;
 }
 

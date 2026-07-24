@@ -4,9 +4,11 @@ import {
   getProjects,
   getProject,
   createProject,
+  updateProject,
   deleteProject,
   addTask,
   toggleTask,
+  updateTask,
   deleteTask,
 } from "./data.js";
 
@@ -45,6 +47,20 @@ app.post("/api/projects", (req, res) => {
   res.status(201).json(project);
 });
 
+// Projekt bearbeiten
+app.patch("/api/projects/:id", (req, res) => {
+  const { name, description } = req.body;
+  if (name !== undefined && !name.trim()) {
+    return res.status(400).json({ error: "Projektname ist erforderlich" });
+  }
+  const project = updateProject(Number(req.params.id), {
+    name: name !== undefined ? name.trim() : undefined,
+    description,
+  });
+  if (!project) return res.status(404).json({ error: "Projekt nicht gefunden" });
+  res.json(project);
+});
+
 // Projekt loeschen
 app.delete("/api/projects/:id", (req, res) => {
   const success = deleteProject(Number(req.params.id));
@@ -56,18 +72,32 @@ app.delete("/api/projects/:id", (req, res) => {
 
 // Neue Unteraufgabe zu einem Projekt hinzufuegen
 app.post("/api/projects/:id/tasks", (req, res) => {
-  const { title } = req.body;
+  const { title, description } = req.body;
   if (!title || !title.trim()) {
     return res.status(400).json({ error: "Titel der Aufgabe ist erforderlich" });
   }
-  const task = addTask(Number(req.params.id), title.trim());
+  const task = addTask(Number(req.params.id), title.trim(), description);
   if (!task) return res.status(404).json({ error: "Projekt nicht gefunden" });
   res.status(201).json(task);
 });
 
 // Erledigt-Status einer Unteraufgabe umschalten
-app.patch("/api/projects/:id/tasks/:taskId", (req, res) => {
+app.patch("/api/projects/:id/tasks/:taskId/toggle", (req, res) => {
   const task = toggleTask(Number(req.params.id), Number(req.params.taskId));
+  if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
+  res.json(task);
+});
+
+// Unteraufgabe bearbeiten (Titel/Beschreibung)
+app.patch("/api/projects/:id/tasks/:taskId", (req, res) => {
+  const { title, description } = req.body;
+  if (title !== undefined && !title.trim()) {
+    return res.status(400).json({ error: "Titel der Aufgabe ist erforderlich" });
+  }
+  const task = updateTask(Number(req.params.id), Number(req.params.taskId), {
+    title: title !== undefined ? title.trim() : undefined,
+    description,
+  });
   if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
   res.json(task);
 });
