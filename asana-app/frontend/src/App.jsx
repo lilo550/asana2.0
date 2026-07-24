@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ProjectCard from "./components/ProjectCard.jsx";
 import NewProjectForm from "./components/NewProjectForm.jsx";
+import ConfirmDialog from "./components/ConfirmDialog.jsx";
 import * as api from "./api.js";
 import "./App.css";
 
@@ -8,6 +9,9 @@ export default function App() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // pendingDelete: { type: "project" | "task", projectId, taskId?, label } | null
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   useEffect(() => {
     loadProjects();
@@ -32,15 +36,6 @@ export default function App() {
     try {
       const project = await api.createProject(name, description);
       setProjects((prev) => [...prev, project]);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleDeleteProject(projectId) {
-    try {
-      await api.deleteProject(projectId);
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
     } catch (err) {
       setError(err.message);
     }
@@ -77,18 +72,57 @@ export default function App() {
     }
   }
 
-  async function handleDeleteTask(projectId, taskId) {
+  // --- Löschen mit Bestätigung ------------------------------------------
+  // Statt sofort zu löschen, öffnen diese Funktionen nur noch den
+  // Bestätigungsdialog. Die eigentliche API-Anfrage passiert erst in
+  // confirmDelete(), nachdem der Nutzer bestätigt hat.
+
+  function requestDeleteProject(projectId) {
+    const project = projects.find((p) => p.id === projectId);
+    setPendingDelete({
+      type: "project",
+      projectId,
+      label: project ? project.name : "dieses Projekt",
+    });
+  }
+
+  function requestDeleteTask(projectId, taskId) {
+    const project = projects.find((p) => p.id === projectId);
+    const task = project?.tasks.find((t) => t.id === taskId);
+    setPendingDelete({
+      type: "task",
+      projectId,
+      taskId,
+      label: task ? task.title : "diese Aufgabe",
+    });
+  }
+
+  function cancelDelete() {
+    setPendingDelete(null);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    const { type, projectId, taskId } = pendingDelete;
+
     try {
-      await api.deleteTask(projectId, taskId);
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === projectId
-            ? { ...p, tasks: p.tasks.filter((t) => t.id !== taskId) }
-            : p
-        )
-      );
+      if (type === "project") {
+        await api.deleteProject(projectId);
+        setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      } else if (type === "task") {
+        await api.deleteTask(projectId, taskId);
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === projectId
+              ? { ...p, tasks: p.tasks.filter((t) => t.id !== taskId) }
+              : p
+          )
+        );
+      }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setPendingDelete(null);
     }
   }
 
@@ -133,9 +167,9 @@ export default function App() {
                     key={project.id}
                     project={project}
                     onToggleTask={handleToggleTask}
-                    onDeleteTask={handleDeleteTask}
+                    onDeleteTask={requestDeleteTask}
                     onAddTask={handleAddTask}
-                    onDeleteProject={handleDeleteProject}
+                    onDeleteProject={requestDeleteProject}
                   />
                 ))}
               </div>
@@ -143,6 +177,26 @@ export default function App() {
           </>
         )}
       </main>
+
+      {pendingDelete && pendingDelete.type === "project" && (
+        <ConfirmDialog
+          title={`„${pendingDelete.label}" löschen?`}
+          message="Das Projekt und alle zugehörigen Unteraufgaben werden dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden."
+          confirmLabel="Projekt löschen"
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
+
+      {pendingDelete && pendingDelete.type === "task" && (
+        <ConfirmDialog
+          title={`„${pendingDelete.label}" löschen?`}
+          message="Diese Unteraufgabe wird dauerhaft gelöscht."
+          confirmLabel="Aufgabe löschen"
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
     </div>
   );
 }
