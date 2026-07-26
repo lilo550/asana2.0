@@ -1,0 +1,247 @@
+{
+  "v": 6,
+  "name": "Asana-Next Events API",
+  "folders": [
+    {
+      "v": 6,
+      "name": "Events",
+      "folders": [],
+      "requests": [
+        {
+          "v": "9",
+          "name": "Get All Events",
+          "method": "GET",
+          "endpoint": "{{baseUrl}}/api/events",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Get Single Event",
+          "method": "GET",
+          "endpoint": "{{baseUrl}}/api/events/1",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Get Single Event - Not Found (404)",
+          "method": "GET",
+          "endpoint": "{{baseUrl}}/api/events/9999",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Create Event",
+          "method": "POST",
+          "endpoint": "{{baseUrl}}/api/events",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"name\": \"Neues Event\",\n  \"description\": \"Beschreibung des Events\",\n  \"date\": \"2026-09-01\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Create Event - Missing Name (400)",
+          "method": "POST",
+          "endpoint": "{{baseUrl}}/api/events",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"description\": \"Event ohne Namen\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Update Event (partial - PATCH)",
+          "method": "PATCH",
+          "endpoint": "{{baseUrl}}/api/events/1",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"name\": \"Aktualisierter Eventname\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Replace Event (full - PUT)",
+          "method": "PUT",
+          "endpoint": "{{baseUrl}}/api/events/1",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"name\": \"Komplett ersetztes Event\",\n  \"description\": \"Neue Beschreibung\",\n  \"date\": \"2026-10-15\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Replace Event - Missing Name (400)",
+          "method": "PUT",
+          "endpoint": "{{baseUrl}}/api/events/1",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"description\": \"Ersetzung ohne Namen\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Delete Event",
+          "method": "DELETE",
+          "endpoint": "{{baseUrl}}/api/events/1",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Delete Event - Not Found (404)",
+          "method": "DELETE",
+          "endpoint": "{{baseUrl}}/api/events/9999",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        }
+      ]
+    },
+    {
+      "v": 6,
+      "name": "Projects (nested)",
+      "folders": [],
+      "requests": [
+        {
+          "v": "9",
+          "name": "Create Project",
+          "method": "POST",
+          "endpoint": "{{baseUrl}}/api/events/1/projects",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"name\": \"Neues Projekt\",\n  \"description\": \"Beschreibung des Projekts\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Update Project",
+          "method": "PATCH",
+          "endpoint": "{{baseUrl}}/api/events/1/projects/1",
+          "params": [],
+          "headers": [
+            { "key": "Content-Type", "value": "application/json", "active": true }
+          ],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"name\": \"Aktualisiertes Projekt\"\n}"
+          },
+          "requestVariables": []
+        },
+        {
+          "v": "9",
+          "name": "Delete Project",
+          "method": "DELETE",
+          "endpoint": "{{baseUrl}}/api/events/1/projects/1",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        }
+      ]
+    },
+    {
+      "v": 6,
+      "name": "Health",
+      "folders": [],
+      "requests": [
+        {
+          "v": "9",
+          "name": "Health Check",
+          "method": "GET",
+          "endpoint": "{{baseUrl}}/api/health",
+          "params": [],
+          "headers": [],
+          "auth": { "authType": "inherit", "authActive": true },
+          "preRequestScript": "",
+          "testScript": "",
+          "body": { "contentType": null, "body": null },
+          "requestVariables": []
+        }
+      ]
+    }
+  ],
+  "requests": [],
+  "auth": { "authType": "none", "authActive": true },
+  "headers": []
+}

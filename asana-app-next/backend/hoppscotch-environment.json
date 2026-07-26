@@ -1,0 +1,7 @@
+{
+  "v": 1,
+  "name": "Asana-Next Local",
+  "variables": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "secret": false }
+  ]
+}

@@ -72,6 +72,15 @@ export function updateEvent(id, { name, description, date }) {
   return event;
 }
 
+export function replaceEvent(id, { name, description, date }) {
+  const event = getEvent(id);
+  if (!event) return null;
+  event.name = name;
+  event.description = description || "";
+  event.date = date || "";
+  return event;
+}
+
 export function deleteEvent(id) {
   const index = events.findIndex((e) => e.id === id);
   if (index === -1) return false;
