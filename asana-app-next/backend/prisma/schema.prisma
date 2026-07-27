@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id     Int     @id @default(autoincrement())
+  email  String?
+  name   String
+  events Event[]
+
+  @@map("users")
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  name        String
+  done        Boolean   @default(false)
+  description String?
+  date        DateTime?
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  projects    Project[]
+
+  @@map("events")
+}
+
+model Project {
+  id          Int     @id @default(autoincrement())
+  name        String
+  done        Boolean @default(false)
+  description String?
+  eventId     Int
+  event       Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("projects")
+}
