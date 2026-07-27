@@ -1,29 +1,86 @@
 import { Router } from "express";
-import { prisma, getDefaultUserId } from "../prismaClient.js";
+import { prisma } from "../prismaClient.js";
 
 const router = Router();
 
+const MAX_NAME_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 2000;
+
+// Wandelt einen Route-Param in eine gueltige positive Ganzzahl um, sonst null.
+// Verhindert, dass z.B. "/api/events/abc" als NaN bis in die Prisma-Query
+// durchsickert und dort in einem generischen 500 statt einem sauberen
+// 400 endet.
+function parseId(value) {
+  if (!/^\d+$/.test(value)) return null;
+  return Number(value);
+}
+
+function validateNameAndDescription(res, { name, description }, nameRequired) {
+  if (nameRequired && (!name || !name.trim())) {
+    res.status(400).json({ error: "Name ist erforderlich" });
+    return false;
+  }
+  if (name !== undefined && name.length > MAX_NAME_LENGTH) {
+    res.status(400).json({ error: `Name darf maximal ${MAX_NAME_LENGTH} Zeichen haben` });
+    return false;
+  }
+  if (description !== undefined && description !== null && description.length > MAX_DESCRIPTION_LENGTH) {
+    res
+      .status(400)
+      .json({ error: `Beschreibung darf maximal ${MAX_DESCRIPTION_LENGTH} Zeichen haben` });
+    return false;
+  }
+  return true;
+}
+
+// Liefert das Event nur, wenn es dem angemeldeten Nutzer gehoert.
+async function findOwnedEvent(id, userId) {
+  const event = await prisma.event.findUnique({ where: { id } });
+  if (!event || event.userId !== userId) return null;
+  return event;
+}
+
+// Liefert das Projekt nur, wenn es zum angegebenen Event gehoert UND das
+// Event wiederum dem angemeldeten Nutzer.
+async function findOwnedProject(projectId, eventId, userId) {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { event: true },
+  });
+  if (!project || project.eventId !== eventId || project.event.userId !== userId) {
+    return null;
+  }
+  return project;
+}
+
 // --- Events ---
 
-// Alle Events inkl. Projekte abrufen
+// Alle eigenen Events inkl. Projekte abrufen
 router.get("/", async (req, res) => {
   try {
-    const events = await prisma.event.findMany({ include: { projects: true } });
+    const events = await prisma.event.findMany({
+      where: { userId: req.user.userId },
+      include: { projects: true },
+    });
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: "Fehler beim Laden der Events" });
   }
 });
 
-// Einzelnes Event abrufen
+// Einzelnes eigenes Event abrufen
 router.get("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) return res.status(400).json({ error: "Ungültige Event-ID" });
+
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: Number(req.params.id) },
+    const event = await findOwnedEvent(id, req.user.userId);
+    if (!event) return res.status(404).json({ error: "Event nicht gefunden" });
+    const withProjects = await prisma.event.findUnique({
+      where: { id: event.id },
       include: { projects: true },
     });
-    if (!event) return res.status(404).json({ error: "Event nicht gefunden" });
-    res.json(event);
+    res.json(withProjects);
   } catch (err) {
     res.status(500).json({ error: "Fehler beim Laden des Events" });
   }
@@ -31,19 +88,16 @@ router.get("/:id", async (req, res) => {
 
 // Neues Event anlegen
 router.post("/", async (req, res) => {
-  const { name, description, date, userId } = req.body;
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: "Eventname ist erforderlich" });
-  }
+  const { name, description, date } = req.body;
+  if (!validateNameAndDescription(res, { name, description }, true)) return;
+
   try {
-    const resolvedUserId =
-      userId !== undefined ? Number(userId) : await getDefaultUserId();
     const event = await prisma.event.create({
       data: {
         name: name.trim(),
         description,
         date: date ? new Date(date) : null,
-        userId: resolvedUserId,
+        userId: req.user.userId,
       },
       include: { projects: true },
     });
@@ -53,41 +107,48 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Event bearbeiten
+// Eigenes Event bearbeiten
 router.patch("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) return res.status(400).json({ error: "Ungültige Event-ID" });
+
   const { name, description, date } = req.body;
-  if (name !== undefined && !name.trim()) {
-    return res.status(400).json({ error: "Eventname ist erforderlich" });
-  }
+  if (!validateNameAndDescription(res, { name, description }, false)) return;
+
   const data = {};
   if (name !== undefined) data.name = name.trim();
   if (description !== undefined) data.description = description;
   if (date !== undefined) data.date = date ? new Date(date) : null;
 
   try {
+    const owned = await findOwnedEvent(id, req.user.userId);
+    if (!owned) return res.status(404).json({ error: "Event nicht gefunden" });
+
     const event = await prisma.event.update({
-      where: { id: Number(req.params.id) },
+      where: { id: owned.id },
       data,
       include: { projects: true },
     });
     res.json(event);
   } catch (err) {
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Event nicht gefunden" });
-    }
     res.status(500).json({ error: "Fehler beim Aktualisieren des Events" });
   }
 });
 
-// Event vollstaendig ersetzen
+// Eigenes Event vollstaendig ersetzen
 router.put("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) return res.status(400).json({ error: "Ungültige Event-ID" });
+
   const { name, description, date } = req.body;
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: "Eventname ist erforderlich" });
-  }
+  if (!validateNameAndDescription(res, { name, description }, true)) return;
+
   try {
+    const owned = await findOwnedEvent(id, req.user.userId);
+    if (!owned) return res.status(404).json({ error: "Event nicht gefunden" });
+
     const event = await prisma.event.update({
-      where: { id: Number(req.params.id) },
+      where: { id: owned.id },
       data: {
         name: name.trim(),
         description: description || null,
@@ -97,64 +158,67 @@ router.put("/:id", async (req, res) => {
     });
     res.json(event);
   } catch (err) {
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Event nicht gefunden" });
-    }
     res.status(500).json({ error: "Fehler beim Ersetzen des Events" });
   }
 });
 
-// Event loeschen
+// Eigenes Event loeschen
 router.delete("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) return res.status(400).json({ error: "Ungültige Event-ID" });
+
   try {
-    await prisma.event.delete({ where: { id: Number(req.params.id) } });
+    const owned = await findOwnedEvent(id, req.user.userId);
+    if (!owned) return res.status(404).json({ error: "Event nicht gefunden" });
+
+    await prisma.event.delete({ where: { id: owned.id } });
     res.status(204).send();
   } catch (err) {
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Event nicht gefunden" });
-    }
     res.status(500).json({ error: "Fehler beim Löschen des Events" });
   }
 });
 
 // --- Projekte (gehoeren zu einem Event) ---
 
-// Neues Projekt zu einem Event hinzufuegen
+// Neues Projekt zu einem eigenen Event hinzufuegen
 router.post("/:id/projects", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) return res.status(400).json({ error: "Ungültige Event-ID" });
+
   const { name, description } = req.body;
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: "Projektname ist erforderlich" });
-  }
+  if (!validateNameAndDescription(res, { name, description }, true)) return;
+
   try {
+    const owned = await findOwnedEvent(id, req.user.userId);
+    if (!owned) return res.status(404).json({ error: "Event nicht gefunden" });
+
     const project = await prisma.project.create({
       data: {
         name: name.trim(),
         description,
-        eventId: Number(req.params.id),
+        eventId: owned.id,
       },
     });
     res.status(201).json(project);
   } catch (err) {
-    if (err.code === "P2003") {
-      return res.status(404).json({ error: "Event nicht gefunden" });
-    }
     res.status(500).json({ error: "Fehler beim Anlegen des Projekts" });
   }
 });
 
-// Projekt bearbeiten
+// Projekt eines eigenen Events bearbeiten
 router.patch("/:id/projects/:projectId", async (req, res) => {
-  const { name, description } = req.body;
-  if (name !== undefined && !name.trim()) {
-    return res.status(400).json({ error: "Projektname ist erforderlich" });
+  const id = parseId(req.params.id);
+  const projectId = parseId(req.params.projectId);
+  if (id === null || projectId === null) {
+    return res.status(400).json({ error: "Ungültige ID" });
   }
+
+  const { name, description } = req.body;
+  if (!validateNameAndDescription(res, { name, description }, false)) return;
+
   try {
-    const existing = await prisma.project.findUnique({
-      where: { id: Number(req.params.projectId) },
-    });
-    if (!existing || existing.eventId !== Number(req.params.id)) {
-      return res.status(404).json({ error: "Projekt nicht gefunden" });
-    }
+    const existing = await findOwnedProject(projectId, id, req.user.userId);
+    if (!existing) return res.status(404).json({ error: "Projekt nicht gefunden" });
 
     const data = {};
     if (name !== undefined) data.name = name.trim();
@@ -170,15 +234,17 @@ router.patch("/:id/projects/:projectId", async (req, res) => {
   }
 });
 
-// Projekt loeschen
+// Projekt eines eigenen Events loeschen
 router.delete("/:id/projects/:projectId", async (req, res) => {
+  const id = parseId(req.params.id);
+  const projectId = parseId(req.params.projectId);
+  if (id === null || projectId === null) {
+    return res.status(400).json({ error: "Ungültige ID" });
+  }
+
   try {
-    const existing = await prisma.project.findUnique({
-      where: { id: Number(req.params.projectId) },
-    });
-    if (!existing || existing.eventId !== Number(req.params.id)) {
-      return res.status(404).json({ error: "Projekt nicht gefunden" });
-    }
+    const existing = await findOwnedProject(projectId, id, req.user.userId);
+    if (!existing) return res.status(404).json({ error: "Projekt nicht gefunden" });
 
     await prisma.project.delete({ where: { id: existing.id } });
     res.status(204).send();

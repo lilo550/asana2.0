@@ -7,14 +7,15 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
-  id     Int     @id @default(autoincrement())
-  email  String?
-  name   String
-  events Event[]
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String
+  name     String
+  events   Event[]
 
   @@map("users")
 }
