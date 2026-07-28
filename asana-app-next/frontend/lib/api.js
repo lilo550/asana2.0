@@ -57,6 +57,10 @@ export function getCurrentUser(apiUrl) {
 
 // --- Events ---
 
+export function getEvents(apiUrl) {
+  return request(apiUrl, "/api/events");
+}
+
 export function createEvent(apiUrl, { name, description, date }) {
   return request(apiUrl, "/api/events", {
     method: "POST",

@@ -85,4 +85,5 @@ Was passiert in eurer aktuellen Implementierung, wenn der Server neu startet –
 Meine App würde nicht von Echtzeit-Kommunikation profitieren, da ich mich bewusst dagegen entschieden habe. Theoretisch könnte ein Nutzer davon profitieren, wenn er gleichzeitig auf mehereren Geräten eingeloggt ist und er auf jedem Gerät deb gleichen Stand haben möchte.
 Polling wäre für den Fall eines Nutzers mit mehreren Geräten praktisch, ein periodisches GET /api/events alle 5-10 sollte ausreichen.
 
-ich stimme dieser Einschätzung zu. Sebst hatte ich den Fall eines Nutzers mit mehreren Geräten noch nicht in Erwägung gezogen.
+Ich stimme dieser Einschätzung zu. Sebst hatte ich den Fall eines Nutzers mit mehreren Geräten noch nicht in Erwägung gezogen.
+Dementsprechen habe ich polling integriert.

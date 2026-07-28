@@ -1,19 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EventCard from "./EventCard";
 import NewEventForm from "./NewEventForm";
 import ConfirmDialog from "./ConfirmDialog";
 import * as api from "@/lib/api";
 
+const POLL_INTERVAL_MS = 10000;
+
 export default function EventsView({ initialEvents, apiUrl }) {
-  // initialEvents kommt bereits fertig geladen von der Server Component -
-  // hier nur noch lokaler State fuer Client-seitige Aenderungen (kein useEffect).
+  // initialEvents kommt bereits fertig geladen von der Server Component.
   const [events, setEvents] = useState(initialEvents);
   const [error, setError] = useState(null);
 
   // pendingDelete: { type: "event" | "project", eventId, projectId?, label } | null
   const [pendingDelete, setPendingDelete] = useState(null);
+
+  // Multi-Tab/Geraet-Sync: derselbe Nutzer kann mehrere Tabs offen haben
+  // (z.B. Handy + Laptop). Damit eine Aenderung in einem Tab in den anderen
+  // erscheint, wird die eigene (durch userId gescopte) Event-Liste periodisch
+  // neu geholt - bewusst per Polling statt Sockets, siehe Begruendung in
+  // documentation.md Session 7 (kein nutzeruebergreifendes Echtzeit-Bedarf,
+  // Polling ist hier einfacher und ausreichend).
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        const latest = await api.getEvents(apiUrl);
+        setEvents(latest);
+      } catch (err) {
+        // Fehlgeschlagener Poll wird bewusst nicht als Fehlermeldung
+        // angezeigt - er soll die Ansicht nicht fuer eine einzelne
+        // verpasste Aktualisierung stoeren, der naechste Poll versucht es erneut.
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [apiUrl]);
 
   async function handleCreateEvent(name, description, date) {
     try {
