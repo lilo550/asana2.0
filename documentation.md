@@ -59,3 +59,30 @@ Welche zwei Dinge in eurem Projekt würden den meisten Schaden anrichten, wenn s
 - Wenn die Schnittstellen nicht mehr funktionieren.
 Unit: events.test.ts; auth.test.ts; api.test.ts
 E2E: login.cy.js; logout.cy.js; register.cy.js
+
+Session 7:
+Gibt es Daten in eurer App, die sich ändern können, während ein anderer Nutzer die Seite offen hat?	 
+	Nein.
+Müssen Änderungen sofort sichtbar sein – oder reicht ein Reload?	 
+	Falls Änderungen vorgenommen werden, reicht ein Reload.
+Ist die Kommunikation einseitig (Server → Client) oder bidirektional (beide senden)?	 
+	Einseitige Kommunikation.
+Wie viele Clients könnten gleichzeitig verbunden sein?
+	Es können 10 Clients gleichzeitig verbunden sein.
+Technologieentscheidung: 
+	Es ist keine Echtzeit notwendig, da zwischen den Nutzern keine Kommunikation besteht.
+
+Kriterium							SSE						WebSockets
+Richtung							Server → Client			Bidirektional
+Komplexität im Code					Gering					Mittel
+Reconnect bei Verbindungsabbruch	Automatisch (Browser)	Manuell / socket.io übernimmt
+Geeignet für euer Projekt			❌					  ❌
+Warum?								In meinem Projekt ist keine Kommunikation zwischen Benutzern vorgesehen.
+
+Was passiert in eurer aktuellen Implementierung, wenn der Server neu startet – verlieren verbundene Clients ihre Verbindung, und wie verhält sich die App dann?
+	Da Postgress unabhängig vom Server läuft, gehen keine Daten veroren. Nutzer bleiben nach Neustart weiterhin verbunden, da die Authentifizierung über ein clientseitig gespeichertes JWT läuft.
+
+Meine App würde nicht von Echtzeit-Kommunikation profitieren, da ich mich bewusst dagegen entschieden habe. Theoretisch könnte ein Nutzer davon profitieren, wenn er gleichzeitig auf mehereren Geräten eingeloggt ist und er auf jedem Gerät deb gleichen Stand haben möchte.
+Polling wäre für den Fall eines Nutzers mit mehreren Geräten praktisch, ein periodisches GET /api/events alle 5-10 sollte ausreichen.
+
+ich stimme dieser Einschätzung zu. Sebst hatte ich den Fall eines Nutzers mit mehreren Geräten noch nicht in Erwägung gezogen.
