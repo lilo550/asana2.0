@@ -1,6 +1,6 @@
 import { authFetch } from "./authFetch";
 
-async function parseResponse(res) {
+export async function parseResponse(res) {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || "Anfrage fehlgeschlagen");

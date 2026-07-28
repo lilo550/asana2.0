@@ -32,7 +32,7 @@ Ein anonymer User kann momentan auf alle Events zugreifen und diese beliebigen e
 Ein anonymer User kann jegliche Events löschen.
 Ein anonymer User kann jegliche Events bearbeiten und ersetzen.
 
-Middleware: Wenn jemand versuchen würde den JWT-Payload (z.B. userId) manuell zu verändern, 
+Middleware: Wenn jemand versuchen würde den JWT-Payload (z.B. userId) manuell zu verändern, dann ist die Verifizierung des Tokes gegenüber dem Secret nicht erfolgreich. Deshalb wird der Datenzugriff abgelehnt. 
 
 OWASP:
 Punkt							Status
@@ -43,3 +43,19 @@ A03 XSS							⚠️ Verbesserungswürdig (aktuell nur durch React geschützt)
 A07 Einheitliche Fehlermeldung	⚠️ Timing-Leak trotz gleicher Nachricht
 A07 Schwache Passwörter			❌ Fehlt (kein Server-seitiges Minimum)
 A07 Brute-Force-Schutz			❌ Fehlt (kein Rate-Limiting)
+
+Session 6:
+Ebene			Was testen wir bei uns?								Tool
+Unit			Validiere den Namen und die Beschreibung von Events	Vitest
+				Setze Token mit erwarteten Cookie-Optionen			Vitest
+				Finde zum Nutzer gehörendes Event					Vitest
+				Finde zum Nutzer gehörendes Projekt					Vitest
+Integration		Ein Event anlegen mit POST							Vitest
+E2E				Als Benutzer am Client einloggen					Cypress
+				Als Benutzer am Client ausloggen					Cypress
+				Als Benutzer am Client registrieren					Cypress
+Welche zwei Dinge in eurem Projekt würden den meisten Schaden anrichten, wenn sie kaputt gehen bei einer Änderung durch den Agenten?
+- Wenn die Authentifizierung nicht mehr funktioniert und die Nutzerdaten kompromittiert oder gelöscht werden.
+- Wenn die Schnittstellen nicht mehr funktionieren.
+Unit: events.test.ts; auth.test.ts; api.test.ts
+E2E: login.cy.js; logout.cy.js; register.cy.js

@@ -45,6 +45,7 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
+              data-cy="register-email-input"
               className="mt-1 w-full rounded-md border border-primary/20 px-3 py-2 text-sm focus:border-secondary focus:outline-none"
             />
           </div>
@@ -56,12 +57,16 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
+              data-cy="register-password-input"
               className="mt-1 w-full rounded-md border border-primary/20 px-3 py-2 text-sm focus:border-secondary focus:outline-none"
             />
           </div>
 
           {error && (
-            <p className="rounded-md bg-secondary/10 px-3 py-2 text-sm text-secondary-dark">
+            <p
+              data-cy="register-error-message"
+              className="rounded-md bg-secondary/10 px-3 py-2 text-sm text-secondary-dark"
+            >
               {error}
             </p>
           )}
@@ -69,6 +74,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={submitting}
+            data-cy="register-submit-button"
             className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-light disabled:opacity-60"
           >
             {submitting ? "Wird registriert…" : "Registrieren"}

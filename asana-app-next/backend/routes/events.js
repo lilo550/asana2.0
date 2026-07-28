@@ -3,8 +3,8 @@ import { prisma } from "../prismaClient.js";
 
 const router = Router();
 
-const MAX_NAME_LENGTH = 200;
-const MAX_DESCRIPTION_LENGTH = 2000;
+export const MAX_NAME_LENGTH = 200;
+export const MAX_DESCRIPTION_LENGTH = 2000;
 
 // Wandelt einen Route-Param in eine gueltige positive Ganzzahl um, sonst null.
 // Verhindert, dass z.B. "/api/events/abc" als NaN bis in die Prisma-Query
@@ -15,7 +15,7 @@ function parseId(value) {
   return Number(value);
 }
 
-function validateNameAndDescription(res, { name, description }, nameRequired) {
+export function validateNameAndDescription(res, { name, description }, nameRequired) {
   if (nameRequired && (!name || !name.trim())) {
     res.status(400).json({ error: "Name ist erforderlich" });
     return false;
@@ -34,7 +34,7 @@ function validateNameAndDescription(res, { name, description }, nameRequired) {
 }
 
 // Liefert das Event nur, wenn es dem angemeldeten Nutzer gehoert.
-async function findOwnedEvent(id, userId) {
+export async function findOwnedEvent(id, userId) {
   const event = await prisma.event.findUnique({ where: { id } });
   if (!event || event.userId !== userId) return null;
   return event;
@@ -42,7 +42,7 @@ async function findOwnedEvent(id, userId) {
 
 // Liefert das Projekt nur, wenn es zum angegebenen Event gehoert UND das
 // Event wiederum dem angemeldeten Nutzer.
-async function findOwnedProject(projectId, eventId, userId) {
+export async function findOwnedProject(projectId, eventId, userId) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: { event: true },

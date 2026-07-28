@@ -29,13 +29,13 @@ const authRateLimiter = rateLimit({
   message: { error: "Zu viele Versuche. Bitte später erneut versuchen." },
 });
 
-const COOKIE_OPTIONS = {
+export const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax",
 };
 
-function setAuthCookie(res, token) {
+export function setAuthCookie(res, token) {
   res.cookie("token", token, { ...COOKIE_OPTIONS, maxAge: TOKEN_TTL_MS });
 }
 
