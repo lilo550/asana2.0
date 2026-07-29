@@ -5,7 +5,9 @@ import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
 import eventsRouter from "./routes/events.js";
 import authRouter from "./routes/auth.js";
+import pushRouter from "./routes/push.js";
 import { authenticate } from "./middleware/authenticate.js";
+import { sendDueReminders } from "./lib/eventReminders.js";
 
 if (!process.env.JWT_SECRET) {
   throw new Error(
@@ -36,9 +38,26 @@ app.use("/api/Auth", authRouter);
 // --- Events (inkl. verschachtelter Projekte) ---
 app.use("/api/events", authenticate, eventsRouter);
 
+// --- Web Push ---
+app.use("/api/push", authenticate, pushRouter);
+
 const httpServer = app.listen(PORT, () => {
   console.log(`Backend laeuft auf http://localhost:${PORT}`);
 });
+
+// Prueft periodisch auf Events, die in 3 Tagen faellig sind, und schickt
+// Push-Erinnerungen. Einmal sofort beim Start (praktisch zum Testen) und
+// danach alle 24 Stunden.
+const REMINDER_CHECK_INTERVAL_MS = 1 * 60 * 60 * 1000;
+
+function checkReminders() {
+  sendDueReminders().catch((err) => {
+    console.error("Fehler beim Pruefen faelliger Events:", err);
+  });
+}
+
+checkReminders();
+setInterval(checkReminders, REMINDER_CHECK_INTERVAL_MS);
 
 // --- socket.io: NICHT produktiv notwendig -------------------------------
 // Reine Lern-/Demo-Integration (siehe documentation.md, Session 7). Die

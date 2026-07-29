@@ -1,3 +1,5 @@
+//wird nicht mehr Benoetigt
+
 // Einfacher In-Memory-Datenspeicher.
 // In einer echten Anwendung wuerde hier eine Datenbank (z.B. SQLite/Postgres) angebunden.
 

@@ -4,10 +4,12 @@ import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../prismaClient.js";
 import { authenticate } from "../middleware/authenticate.js";
+import { sendWelcomeEmail } from "../lib/mailer.js";
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 const INVALID_CREDENTIALS_MESSAGE = "E-Mail oder Passwort ungültig.";
 const MIN_PASSWORD_LENGTH = 8;
@@ -39,6 +41,17 @@ export function setAuthCookie(res, token) {
   res.cookie("token", token, { ...COOKIE_OPTIONS, maxAge: TOKEN_TTL_MS });
 }
 
+// Wird bewusst NICHT awaited beim Aufruf (siehe POST /Register), damit der
+// Mailversand die HTTP-Antwort nicht blockiert. Der try/catch hier verhindert,
+// dass ein Fehler beim Mailversand als unhandled rejection landet.
+async function notifyRegistration(user) {
+  try {
+    await sendWelcomeEmail({ userId: user.id, email: user.email, name: user.name });
+  } catch (err) {
+    console.error("Fehler beim Versand der Registrierungs-Mail:", err);
+  }
+}
+
 // Registrierung
 router.post("/Register", authRateLimiter, async (req, res) => {
   const { email, password } = req.body;
@@ -66,6 +79,10 @@ router.post("/Register", authRateLimiter, async (req, res) => {
         name: normalizedEmail.split("@")[0],
       },
     });
+
+    // Nicht awaited: der Mailversand darf die Antwort auf die Registrierung
+    // nicht verzoegern.
+    notifyRegistration(user);
 
     res.status(201).json({ id: user.id, email: user.email, name: user.name });
   } catch (err) {
@@ -110,6 +127,29 @@ router.post("/Login", authRateLimiter, async (req, res) => {
 router.post("/Logout", (req, res) => {
   res.clearCookie("token", COOKIE_OPTIONS);
   res.status(204).send();
+});
+
+// Tauscht das kurzlebige Token aus dem Mail-Link gegen ein normales
+// Session-Cookie und leitet auf die Startseite weiter - dort ist der Nutzer
+// dann bereits eingeloggt (siehe lib/mailer.js fuer die Token-Erzeugung).
+router.get("/session", (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.redirect(`${FRONTEND_URL}/login`);
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] });
+    const sessionToken = jwt.sign(
+      { userId: payload.userId, email: payload.email },
+      JWT_SECRET,
+      { algorithm: "HS256", expiresIn: "24h" }
+    );
+    setAuthCookie(res, sessionToken);
+    res.redirect(FRONTEND_URL);
+  } catch (err) {
+    res.redirect(`${FRONTEND_URL}/login`);
+  }
 });
 
 // "Wer bin ich": liefert die Daten des anhand des Tokens erkannten Nutzers.

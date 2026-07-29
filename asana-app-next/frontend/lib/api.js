@@ -55,6 +55,19 @@ export function getCurrentUser(apiUrl) {
   return request(apiUrl, "/api/Auth/Me");
 }
 
+// --- Web Push ---
+
+export function getPushPublicKey(apiUrl) {
+  return request(apiUrl, "/api/push/public-key");
+}
+
+export function subscribeToPush(apiUrl, subscription) {
+  return request(apiUrl, "/api/push/subscribe", {
+    method: "POST",
+    body: JSON.stringify(subscription),
+  });
+}
+
 // --- Events ---
 
 export function getEvents(apiUrl) {

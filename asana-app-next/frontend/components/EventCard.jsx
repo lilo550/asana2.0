@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import DatePicker from "react-date-picker";
 import ProjectItem from "./ProjectItem";
 import NewProjectForm from "./NewProjectForm";
+import { formatEventDate, isoToPickerDate, pickerDateToIsoDateString } from "@/lib/dateUtils";
 
 export default function EventCard({
   event,
@@ -15,19 +17,19 @@ export default function EventCard({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(event.name);
   const [description, setDescription] = useState(event.description);
-  const [date, setDate] = useState(event.date);
+  const [date, setDate] = useState(() => isoToPickerDate(event.date));
 
   function handleSave(e) {
     e.preventDefault();
     if (!name.trim()) return;
-    onUpdateEvent(name.trim(), description.trim(), date);
+    onUpdateEvent(name.trim(), description.trim(), pickerDateToIsoDateString(date));
     setEditing(false);
   }
 
   function handleCancel() {
     setName(event.name);
     setDescription(event.description);
-    setDate(event.date);
+    setDate(isoToPickerDate(event.date));
     setEditing(false);
   }
 
@@ -48,12 +50,7 @@ export default function EventCard({
               rows={2}
               className="w-full rounded-md border border-primary/20 px-3 py-2 text-sm focus:border-secondary focus:outline-none"
             />
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="rounded-md border border-primary/20 px-3 py-2 text-sm focus:border-secondary focus:outline-none"
-            />
+            <DatePicker value={date} onChange={setDate} format="dd.MM.y" clearIcon={null} />
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
@@ -76,7 +73,7 @@ export default function EventCard({
               <h2 className="text-lg font-semibold text-primary">{event.name}</h2>
               {event.date && (
                 <p className="text-xs font-medium uppercase tracking-wide text-secondary-dark">
-                  {event.date}
+                  {formatEventDate(event.date)}
                 </p>
               )}
               {event.description && (
@@ -105,7 +102,7 @@ export default function EventCard({
 
       <div className="space-y-2 px-5 py-4">
         <h3 className="text-sm font-semibold text-primary/80">
-          Projekte ({event.projects.length})
+          {event.projects.length} Projekte
         </h3>
 
         {event.projects.length === 0 ? (

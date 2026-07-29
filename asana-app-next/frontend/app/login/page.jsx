@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginUser } from "@/lib/api";
+import { setupPushNotifications } from "@/lib/push";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -20,6 +21,11 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await loginUser(API_URL, { email, password });
+      // Bewusst nicht awaited: das Berechtigungs-Prompt darf die
+      // Weiterleitung nach dem Login nicht blockieren oder verzoegern.
+      setupPushNotifications(API_URL).catch((err) => {
+        console.error("Push-Setup fehlgeschlagen:", err);
+      });
       router.push("/");
       router.refresh();
     } catch (err) {

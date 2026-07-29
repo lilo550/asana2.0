@@ -1,4 +1,6 @@
 import "./globals.css";
+import "react-calendar/dist/Calendar.css";
+import "react-date-picker/dist/DatePicker.css";
 
 export const metadata = {
   title: "Asana App Next – Events & Projekte",

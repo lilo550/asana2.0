@@ -1,3 +1,8 @@
+TEST_ACCOUNT
+  email: "test@example.com",
+  password: "test1234",
+  name: "Test User",
+
 Session 2:
 Ich habe mich für Next.js entschieden, da der SEO Wert höher ist.
 
@@ -86,4 +91,37 @@ Meine App würde nicht von Echtzeit-Kommunikation profitieren, da ich mich bewus
 Polling wäre für den Fall eines Nutzers mit mehreren Geräten praktisch, ein periodisches GET /api/events alle 5-10 sollte ausreichen.
 
 Ich stimme dieser Einschätzung zu. Sebst hatte ich den Fall eines Nutzers mit mehreren Geräten noch nicht in Erwägung gezogen.
-Dementsprechen habe ich polling integriert.
+Dementsprechen habe ich polling nachträglich integriert.
+
+Session 8:
+Event in eurer App			Notification sinnvoll?	Typ (Transactional/Product/Marketing)	Kanal (E-Mail/Push/keiner)	Begründung
+Nutzer hat sich registriert	Ja						Transactional							E-Mail						Nutzer muss zeitnah handeln
+Passwort wurde geändert		Ja						Transactional							E-Mail						Sicherheitsrelevant, braucht Persistenz
+Wöchentliche Zusammenfassung	Optional			Product									E-Mail						Kein Zeitdruck, viel Inhalt
+Ein Event ist in <3 tagen fällig	Ja				--										Push						Nutzer soll erinnert werden
+
+Gibt es Events, bei denen der Nutzer sofort reagieren muss – oder reicht eine Mail, die er später liest?
+	Bei einer Passwort änderung muss der Nutzer sofort reagieren.
+Habt ihr Marketing-Content geplant, der ein explizites Opt-in braucht?
+	Nein
+Wie viele verschiedene Events würden pro Stunde realistisch Notifications auslösen?
+	0 bis 1, wenn mehrere Projekte gleichzeitig fällig sind, soll nur eine Push-Benachrichtigung rausgehen
+
+Kanalentscheidung: Ich benötige E-Mail und Push. E-Mails für alle Benachrichtigungen, bei denen es wichtig ist eine Historie zu haben und Push zur Erinnerung des Nutzers.
+
+Template prüfen:
+Enthält das Template alle Infos, die der Nutzer braucht – ohne sich einloggen zu müssen?
+	Ja
+Gibt es einen direkten Deep Link zur betroffenen Ansicht (nicht nur zur Startseite)?
+	Ja
+Ist Betreff / Notification-Titel klar, was das Event war – in unter 50 Zeichen?
+	Ja
+Ist der Notification-Body unter 120 Zeichen?
+	Ja
+
+Session 9:
+Wofür ist sie verantwortlich?	Greift sie auf Daten anderer Bereiche zu?
+auth.js
+	Nutzer Registrierung und Login, 
+events.js
+push.js

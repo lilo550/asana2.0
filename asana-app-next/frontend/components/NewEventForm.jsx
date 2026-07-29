@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import DatePicker from "react-date-picker";
+import { pickerDateToIsoDateString } from "@/lib/dateUtils";
 
 export default function NewEventForm({ onCreate }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(null);
   const [open, setOpen] = useState(false);
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) return;
-    onCreate(name.trim(), description.trim(), date);
+    onCreate(name.trim(), description.trim(), pickerDateToIsoDateString(date));
     setName("");
     setDescription("");
-    setDate("");
+    setDate(null);
     setOpen(false);
   }
 
@@ -58,11 +60,12 @@ export default function NewEventForm({ onCreate }) {
       </div>
       <div>
         <label className="block text-sm font-medium text-primary">Datum</label>
-        <input
-          type="date"
+        <DatePicker
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mt-1 w-full rounded-md border border-primary/20 px-3 py-2 text-sm focus:border-secondary focus:outline-none"
+          onChange={setDate}
+          format="dd.MM.y"
+          clearIcon={null}
+          className="mt-1 w-full"
         />
       </div>
       <div className="flex justify-end gap-2 pt-1">
