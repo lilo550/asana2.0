@@ -120,8 +120,50 @@ Ist der Notification-Body unter 120 Zeichen?
 	Ja
 
 Session 9:
-Wofür ist sie verantwortlich?	Greift sie auf Daten anderer Bereiche zu?
 auth.js
-	Nutzer Registrierung und Login, 
+	Verantwortlich für Nutzer Registrierung und Login, Willkommens Mail nach Login.
+	Greift auf mailer.js zu, welche Willkommens Mail rendert.
+	Greift aus authenticate.js zu, welche den Token überprüft.
 events.js
+	Verantwortlich für Event oder Projekt anlegen, bearbeiten, löschen.
 push.js
+	Verantwortlich für Push-Nachricht.
+	Greift auf public-key zu.
+
+Geschäftslogik in Route-Handlern:
+events.js:
+DB zugriff GET - greift zwei mal auf die DB zu um Events und Projekte zu holen, kann in einer Helper-Funktion abgedeckt werden.
+Wiederholtes Ownership-Pattern über die ganze Datei - Authorisierung könnte als eigene Middleware funktionieren.
+Datenaufbau POT/PATCH/PUT - data-Objekt als toEventData({ name, description, date })-Funktion.
+
+auth.js:
+JWT-Erzeugung - jwt.sign({ userId, email }, JWT_SECRET, { algorithm, expiresIn }) steht doppelt, zusammenführen zu createSessionToken(user, { expiresIn }).
+Timing-safe Credential-Check - "User laden, bei fehlendem User gegen DUMMY_PASSWORD_HASH vergleichen" auslagern in verifyCredentials(email, password)-Funktion, da es bereits eine routes/auth.test.ts gibt.
+
+Route-Dateien mit Zugriff auf fachfremde Tabellen:
+Kein Verstoß in auth.js, push.js und events.js.
+Graubereich in lib/eventReminders.js. sendDueReminders() fragt prisma.event.findMany(...) ab, greift dann aber über include: { user: { include: { pushSubscriptions: true } } } zwei Ebenen tief in Push-Domänendaten.
+
+Events Context          Users & Auth Context      Notifications Context
+───────────────         ────────────────────      ──────────────────────
+Event                    User                      PushSubscription
+Project                  Session / JWT             EventReminder (Job)
+                                                     WelcomeEmail
+
+Welche Kontexte kommunizieren miteinander – und was genau übergeben sie?
+Notifications Context braucht von Events Context die Fälligkeitsdaten und von Users & Auth Context den die Mail Adresse eines neuen Nutzers.
+
+events.service.js:
+	öffentlich: validateNameAndDescription(), findOwnedEvent(), findOwnedProject(), listEvents(), listEventsDueInDays(), getOwnedEvent(), createEvent(), updateEvent(), replaceEvent(), deleteEvent(), updateProject(), deleteProject()
+	intern: dayRange()
+
+auth.service.js:
+	öffentlich: createSessionToken(), registerUser(), loginUser(), exchangeSessionToken(), getUserById()
+	intern: normalizeEmail(), notifyRegistration()
+
+notif.service.js:
+	öffentlich: getPushPublicKey(), getPushSubscriptionsForUser()
+	privat: assertValidSubscription(), subscribeToPush()
+
+Welches Modul wäre am einfachsten zu extrahieren, wenn man es irgendwann als eigenen Service deployen müsste?
+	Notification wäre am einfachsten zu extrahieren. Keine andere Route braucht Notif synchron im Request-Pfad. Würde also diese ausfallen, funktioniert der Rest der App unverändert weiter, nur ohne Erinnerungen. Notif hat die kleinste Oberfläche; unteranderem, da sie keine Ownership-Verschachtelungen hat. 

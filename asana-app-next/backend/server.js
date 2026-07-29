@@ -3,9 +3,9 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
-import eventsRouter from "./routes/events.js";
-import authRouter from "./routes/auth.js";
-import pushRouter from "./routes/push.js";
+import eventsRouter from "./modules/events/events.routes.js";
+import authRouter from "./modules/auth/auth.routes.js";
+import notifRouter from "./modules/notif/notif.routes.js";
 import { authenticate } from "./middleware/authenticate.js";
 import { sendDueReminders } from "./lib/eventReminders.js";
 
@@ -39,7 +39,7 @@ app.use("/api/Auth", authRouter);
 app.use("/api/events", authenticate, eventsRouter);
 
 // --- Web Push ---
-app.use("/api/push", authenticate, pushRouter);
+app.use("/api/push", authenticate, notifRouter);
 
 const httpServer = app.listen(PORT, () => {
   console.log(`Backend laeuft auf http://localhost:${PORT}`);
@@ -48,7 +48,7 @@ const httpServer = app.listen(PORT, () => {
 // Prueft periodisch auf Events, die in 3 Tagen faellig sind, und schickt
 // Push-Erinnerungen. Einmal sofort beim Start (praktisch zum Testen) und
 // danach alle 24 Stunden.
-const REMINDER_CHECK_INTERVAL_MS = 1 * 60 * 60 * 1000;
+const REMINDER_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function checkReminders() {
   sendDueReminders().catch((err) => {

@@ -1,76 +1,51 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-// Muss vor dem Import von "./events.js" stehen (vitest hebt vi.mock ohnehin
-// an den Dateianfang) - events.js importiert prisma direkt aus dieser Datei.
-vi.mock("../prismaClient.js", () => ({
+// Muss vor dem Import von "./events.service.js" stehen (vitest hebt vi.mock
+// ohnehin an den Dateianfang) - events.service.js importiert prisma direkt
+// aus dieser Datei.
+vi.mock("../../prismaClient.js", () => ({
   prisma: {
     event: { findUnique: vi.fn() },
     project: { findUnique: vi.fn() },
   },
 }));
 
-import { prisma } from "../prismaClient.js";
+import { prisma } from "../../prismaClient.js";
 import {
   validateNameAndDescription,
+  ValidationError,
   MAX_NAME_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   findOwnedEvent,
   findOwnedProject,
-} from "./events.js";
-
-// Minimaler Fake fuer das Express-Response-Objekt: validateNameAndDescription
-// ruft im Fehlerfall res.status(code).json(body) auf - hier wird beides
-// mitgeschnitten, um es in den Assertions zu pruefen.
-function createMockRes() {
-  const res: { statusCode?: number; body?: unknown; status: (code: number) => typeof res; json: (body: unknown) => typeof res } = {
-    statusCode: undefined,
-    body: undefined,
-    status(code) {
-      res.statusCode = code;
-      return res;
-    },
-    json(body) {
-      res.body = body;
-      return res;
-    },
-  };
-  return res;
-}
+} from "./events.service.js";
 
 describe("validateNameAndDescription", () => {
   it("Normalfall: gueltiger Name und Beschreibung werden akzeptiert", () => {
-    const res = createMockRes();
-
-    const result = validateNameAndDescription(
-      res,
-      { name: "Firmenfeier", description: "Jaehrliches Sommerfest" },
-      true
-    );
-
-    expect(result).toBe(true);
-    expect(res.statusCode).toBeUndefined();
-    expect(res.body).toBeUndefined();
+    expect(() =>
+      validateNameAndDescription({ name: "Firmenfeier", description: "Jaehrliches Sommerfest" }, true)
+    ).not.toThrow();
   });
 
   it("Grenzfall: Name mit genau MAX_NAME_LENGTH Zeichen ist noch gueltig", () => {
-    const res = createMockRes();
     const nameAtLimit = "a".repeat(MAX_NAME_LENGTH);
     const descriptionAtLimit = "a".repeat(MAX_DESCRIPTION_LENGTH);
 
-    const result = validateNameAndDescription(res, { name: nameAtLimit, description: descriptionAtLimit }, true);
-
-    expect(result).toBe(true);
-    expect(res.statusCode).toBeUndefined();
+    expect(() =>
+      validateNameAndDescription({ name: nameAtLimit, description: descriptionAtLimit }, true)
+    ).not.toThrow();
   });
 
-  it("Fehlerfall: fehlender Pflicht-Name wird mit 400 abgelehnt", () => {
-    const res = createMockRes();
+  it("Fehlerfall: fehlender Pflicht-Name wird mit ValidationError abgelehnt", () => {
+    let error: unknown;
+    try {
+      validateNameAndDescription({ name: "   ", description: "   " }, true);
+    } catch (err) {
+      error = err;
+    }
 
-    const result = validateNameAndDescription(res, { name: "   ", description: "   " }, true);
-
-    expect(result).toBe(false);
-    expect(res.statusCode).toBe(400);
-    expect(res.body).toEqual({ error: "Name ist erforderlich" });
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as Error).message).toBe("Name ist erforderlich");
   });
 });
 

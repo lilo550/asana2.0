@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { setAuthCookie, COOKIE_OPTIONS } from "./auth.js";
+import { setAuthCookie, COOKIE_OPTIONS } from "./auth.routes.js";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
