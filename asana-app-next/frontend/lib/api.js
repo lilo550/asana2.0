@@ -51,6 +51,17 @@ export function logoutUser(apiUrl) {
   return publicRequest(apiUrl, "/api/Auth/Logout", { method: "POST" });
 }
 
+// Tauscht das kurzlebige Token aus dem Mail-Login-Link (siehe /session-Seite)
+// per POST gegen ein Session-Cookie ein. Bewusst OHNE authFetch, aus dem
+// gleichen Grund wie bei Login/Register: ein 401 hier bedeutet "Link ist
+// ungueltig/abgelaufen", keine abgelaufene Session.
+export function exchangeSessionToken(apiUrl, token) {
+  return publicRequest(apiUrl, "/api/Auth/session", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
 export function getCurrentUser(apiUrl) {
   return request(apiUrl, "/api/Auth/Me");
 }

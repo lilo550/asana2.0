@@ -35,7 +35,7 @@ export default function EventCard({
 
   return (
     <div className="rounded-xl border border-primary/10 bg-white shadow-sm">
-      <div className="border-b border-primary/10 bg-highlight-light px-5 py-4 rounded-t-xl">
+      <div className="border-b border-primary/10 bg-primary-light px-5 py-4 rounded-t-xl">
         {editing ? (
           <form onSubmit={handleSave} className="space-y-2">
             <input
@@ -70,7 +70,7 @@ export default function EventCard({
         ) : (
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-primary">{event.name}</h2>
+              <h2 className="text-lg font-semibold text-highlight-light">{event.name}</h2>
               {event.date && (
                 <p className="text-xs font-medium uppercase tracking-wide text-secondary-dark">
                   {formatEventDate(event.date)}
@@ -84,7 +84,7 @@ export default function EventCard({
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-primary hover:bg-white"
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-highlight-light hover:bg-white"
               >
                 Bearbeiten
               </button>

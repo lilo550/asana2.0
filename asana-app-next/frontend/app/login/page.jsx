@@ -26,7 +26,7 @@ export default function LoginPage() {
       setupPushNotifications(API_URL).catch((err) => {
         console.error("Push-Setup fehlgeschlagen:", err);
       });
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch (err) {
       setError(err.message);

@@ -18,14 +18,14 @@ describe("Login", () => {
     cy.clearCookies();
   });
 
-  it("meldet einen Nutzer mit gueltigen Zugangsdaten an und leitet zur Startseite weiter", () => {
+  it("meldet einen Nutzer mit gueltigen Zugangsdaten an und leitet zum Dashboard weiter", () => {
     cy.visit("/login");
 
     cy.get('[data-cy="login-email-input"]').type(TEST_USER.email);
     cy.get('[data-cy="login-password-input"]').type(TEST_USER.password);
     cy.get('[data-cy="login-submit-button"]').click();
 
-    cy.url().should("eq", `${Cypress.config("baseUrl")}/`);
+    cy.url().should("eq", `${Cypress.config("baseUrl")}/dashboard`);
     cy.get('[data-cy="events-heading"]').should("be.visible").and("contain.text", "Meine Events");
     // Der JWT-Cookie ist HttpOnly (fuer Seiten-JS unsichtbar), aber Cypress
     // kann ihn zu Testzwecken trotzdem auslesen.

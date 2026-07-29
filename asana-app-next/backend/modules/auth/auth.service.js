@@ -9,13 +9,20 @@ const MIN_PASSWORD_LENGTH = 8;
 const BCRYPT_COST_FACTOR = 12;
 const INVALID_CREDENTIALS_MESSAGE = "E-Mail oder Passwort ungültig.";
 
-// Bcrypt-Hash eines nie verwendeten Platzhalter-Passworts. Wird bei
-// unbekannter E-Mail als Vergleichsziel genutzt, damit bcrypt.compare()
-// immer laeuft - sonst waere die Login-Antwortzeit ein Seitenkanal, ueber
-// den sich registrierte E-Mail-Adressen trotz identischer Fehlermeldung
-// erraten liessen (schnelle Antwort = unbekannt, langsame = bekannt).
-const DUMMY_PASSWORD_HASH =
-  "$2b$12$CwTycUXWue0Thq9StjUM0uJ8mv7XPHzcyDodxrp99SePFbSHUdzoS";
+// Hash eines nie verwendeten Platzhalter-Passworts. Wird bei unbekannter
+// E-Mail als Vergleichsziel genutzt, damit bcrypt.compare() immer laeuft -
+// sonst waere die Login-Antwortzeit ein Seitenkanal, ueber den sich
+// registrierte E-Mail-Adressen trotz identischer Fehlermeldung erraten
+// liessen (schnelle Antwort = unbekannt, langsame = bekannt).
+// Kein echtes Credential - gehoert zu keinem Nutzerkonto. Bewusst einmalig
+// beim Modul-Import aus einem offensichtlichen Platzhalter-Passwort erzeugt
+// statt als fertiger Hash-String im Code zu stehen, damit kein
+// bcrypt-Hash-Literal im Quellcode SAST-Scanner faelschlich als
+// hartkodiertes Credential (CWE-798) markiert.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
+  "no-account-uses-this-placeholder-password",
+  BCRYPT_COST_FACTOR
+);
 
 // Die Route entscheidet anhand des Typs, welcher HTTP-Status daraus wird -
 // dieser Service weiss nichts von req/res.

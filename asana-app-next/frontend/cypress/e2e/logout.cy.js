@@ -10,7 +10,7 @@ describe("Logout", () => {
     cy.clearCookies();
   });
 
-  it("meldet einen eingeloggten Nutzer ab und sperrt den erneuten Zugriff auf die Startseite", () => {
+  it("meldet einen eingeloggten Nutzer ab und sperrt den erneuten Zugriff auf das Dashboard", () => {
     cy.visit("/login");
     cy.get('[data-cy="login-email-input"]').type(TEST_USER.email);
     cy.get('[data-cy="login-password-input"]').type(TEST_USER.password);
@@ -22,9 +22,9 @@ describe("Logout", () => {
     cy.url().should("eq", `${Cypress.config("baseUrl")}/login`);
     cy.getCookie("token").should("not.exist");
 
-    // Session ist wirklich beendet: erneuter Aufruf der Startseite landet
-    // wieder auf /login statt Events zu zeigen.
-    cy.visit("/");
+    // Session ist wirklich beendet: erneuter Aufruf des geschuetzten
+    // Dashboards landet wieder auf /login statt Events zu zeigen.
+    cy.visit("/dashboard");
     cy.url().should("eq", `${Cypress.config("baseUrl")}/login`);
   });
 });

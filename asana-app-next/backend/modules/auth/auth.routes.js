@@ -13,7 +13,6 @@ import {
 
 const router = Router();
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 
 const authRateLimiter = rateLimit({
@@ -75,20 +74,24 @@ router.post("/Logout", (req, res) => {
 });
 
 // Tauscht das kurzlebige Token aus dem Mail-Link gegen ein normales
-// Session-Cookie und leitet auf die Startseite weiter - dort ist der Nutzer
-// dann bereits eingeloggt (siehe lib/mailer.js fuer die Token-Erzeugung).
-router.get("/session", (req, res) => {
-  const { token } = req.query;
+// Session-Cookie (siehe lib/mailer.js fuer die Token-Erzeugung). Bewusst
+// POST mit Token im Body statt GET mit Token im Query-String: so landet der
+// Token nicht in Zugriffslogs, und ein blosses Aufrufen der URL (z.B. durch
+// einen Link-Scanner eines Mail-Providers) kann das Einmal-Token nicht mehr
+// verbrauchen, bevor der Nutzer selbst klickt. Aufgerufen wird das von der
+// Frontend-Landing-Page unter /session, auf die der Mail-Link zeigt.
+router.post("/session", authRateLimiter, (req, res) => {
+  const { token } = req.body;
   if (!token) {
-    return res.redirect(`${FRONTEND_URL}/login`);
+    return res.status(400).json({ error: "Token ist erforderlich" });
   }
 
   try {
     const sessionToken = exchangeSessionToken(token);
     setAuthCookie(res, sessionToken);
-    res.redirect(FRONTEND_URL);
+    res.status(200).json({ ok: true });
   } catch (err) {
-    res.redirect(`${FRONTEND_URL}/login`);
+    res.status(401).json({ error: "Der Link ist ungültig oder abgelaufen." });
   }
 });
 

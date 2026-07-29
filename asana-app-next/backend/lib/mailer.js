@@ -6,7 +6,7 @@ import { WelcomeEmail } from "../emails/WelcomeEmail.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const JWT_SECRET = process.env.JWT_SECRET;
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 // Sendet die Registrierungs-Benachrichtigung. Wird vom Aufrufer bewusst
@@ -20,7 +20,13 @@ export async function sendWelcomeEmail({ userId, email, name }) {
     algorithm: "HS256",
     expiresIn: "15m",
   });
-  const loginUrl = `${BACKEND_URL}/api/Auth/session?token=${sessionToken}`;
+  // Zeigt bewusst auf eine Frontend-Landing-Page, nicht direkt auf den
+  // Backend-Endpoint: die Seite tauscht das Token per POST (Body statt
+  // Query-String) gegen das Session-Cookie ein. So landet der Token nicht in
+  // Backend-Zugriffslogs, und ein einfacher GET (z.B. durch einen
+  // Link-Scanner eines Mail-Providers) verbraucht das Einmal-Token nicht
+  // automatisch (siehe modules/auth/auth.routes.js, POST /session).
+  const loginUrl = `${FRONTEND_URL}/session?token=${sessionToken}`;
 
   const html = await render(WelcomeEmail({ name, loginUrl }));
 

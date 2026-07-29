@@ -1,66 +1,149 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import EventsView from "@/components/EventsView";
-import UserMenu from "@/components/UserMenu";
+import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
-// Server Component: laedt die Events direkt beim Rendern vom Backend,
-// ganz ohne useEffect/useState im Client. Server-seitige fetch()-Aufrufe
-// bekommen Browser-Cookies nicht automatisch mit - der Token-Cookie wird
-// hier deshalb manuell aus der eingehenden Request uebernommen. Bei 401
-// (Token fehlt/ungueltig/abgelaufen) uebernimmt redirect() das, was
-// authFetch() im Client uebernimmt.
-export default async function HomePage() {
-  const token = cookies().get("token")?.value;
-  let events = [];
-  let loadError = null;
-  let res = null;
-
-  try {
-    res = await fetch(`${API_URL}/api/events`, {
-      cache: "no-store",
-      headers: token ? { Cookie: `token=${token}` } : {},
-    });
-  } catch (err) {
-    loadError = `Backend nicht erreichbar. Läuft der Server auf ${API_URL}?`;
-  }
-
-  // redirect() wirft intern eine Kontrollfluss-Exception, die Next.js selbst
-  // faengt - das darf nicht in unserem eigenen try/catch landen, deshalb hier
-  // ausserhalb davon.
-  if (res?.status === 401) {
-    redirect("/login");
-  }
-
-  if (res && !loadError) {
-    if (!res.ok) {
-      loadError = `Backend nicht erreichbar. Läuft der Server auf ${API_URL}?`;
-    } else {
-      events = await res.json();
-    }
-  }
-
+// Oeffentliche Landingpage - der Einstiegspunkt fuer nicht angemeldete
+// Besucher:innen, bevor sie zu /login bzw. /register gehen. Reine Server
+// Component (keine Interaktivitaet noetig), damit sie so schnell wie moeglich
+// laedt. Die eigentliche App liegt jetzt unter /dashboard.
+export default function LandingPage() {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <UserMenu apiUrl={API_URL} />
-
-      <header className="mb-8">
-        <h1 data-cy="events-heading" className="text-3xl font-bold text-primary">
-          Meine Events
+    <main className="bg-highlight-light">
+      {/* Above the fold: Nutzen-Headline, Subtext, primaerer CTA */}
+      <section className="mx-auto max-w-3xl px-4 pb-16 pt-20 text-center">
+        <h1 className="text-4xl font-bold leading-tight text-primary sm:text-5xl">
+          Alle deine Events. Alle deine Projekte.
+          <br className="hidden sm:block" /> Ein Blick genügt.
         </h1>
-        <p className="mt-1 text-primary/70">
-          Behalte den Überblick über deine Events und deren Projekte.
+        <p className="mx-auto mt-4 max-w-xl text-lg text-primary/70">
+          Events anlegen, Projekte zuordnen, jederzeit den Überblick behalten – ganz ohne
+          Chaos in Tabellen oder Notizen.
         </p>
-      </header>
+        <Link
+          href="/register"
+          data-cy="landing-cta-primary"
+          className="mt-8 inline-block rounded-md bg-secondary px-8 py-3 text-base font-semibold text-white shadow-sm hover:bg-secondary-dark"
+        >
+          Jetzt starten
+        </Link>
+        <p className="mt-3 text-sm text-primary/60">
+          Schon dabei?{" "}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            Anmelden
+          </Link>
+        </p>
+      </section>
 
-      {loadError ? (
-        <div className="rounded-lg border border-secondary bg-secondary/10 px-4 py-3 text-secondary-dark">
-          {loadError}
+      {/* Features als Mini-Vorschau der echten Oberflaeche statt Stockfotos */}
+      <section className="mx-auto max-w-5xl px-4 pb-20">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <FeatureCard
+            title="Events & Projekte im Blick"
+            description="Jedes Event zeigt seine Projekte direkt mit an."
+            visual={<EventPreview />}
+          />
+          <FeatureCard
+            title="Beschreibungen & Bearbeiten"
+            description="Namen und Beschreibungen jederzeit anpassen."
+            visual={<EditPreview />}
+          />
+          <FeatureCard
+            title="Sicheres Löschen"
+            description="Vor dem Löschen wird immer nachgefragt."
+            visual={<ConfirmPreview />}
+          />
+          <FeatureCard
+            title="Erinnerung per Push"
+            description="Benachrichtigung, wenn ein Event bald ansteht."
+            visual={<ReminderPreview />}
+          />
         </div>
-      ) : (
-        <EventsView initialEvents={events} apiUrl={API_URL} />
-      )}
+      </section>
+
+      {/* Social Proof */}
+      <section className="mx-auto max-w-2xl px-4 pb-20">
+        <blockquote className="rounded-xl border border-primary/10 bg-white p-6 text-center shadow-sm">
+          <p className="text-primary/80">
+            „Ich habe zum ersten Mal wirklich den Überblick über alle laufenden Projekte."
+          </p>
+          <footer className="mt-3 text-sm font-medium text-primary/60">— Mira, Team-Lead</footer>
+        </blockquote>
+      </section>
+
+      {/* Zweiter CTA, bewusst im Secondary-Design */}
+      <section className="border-t border-primary/10 bg-white px-4 py-16 text-center">
+        <h2 className="text-2xl font-bold text-primary">Bereit für mehr Überblick?</h2>
+        <Link
+          href="/register"
+          data-cy="landing-cta-secondary"
+          className="mt-6 inline-block rounded-md border-2 border-secondary px-8 py-3 text-base font-semibold text-secondary hover:bg-secondary hover:text-white"
+        >
+          Jetzt starten
+        </Link>
+      </section>
     </main>
+  );
+}
+
+function FeatureCard({ title, description, visual }) {
+  return (
+    <div className="rounded-xl border border-primary/10 bg-white p-5 shadow-sm">
+      <div className="mb-4">{visual}</div>
+      <h3 className="font-semibold text-primary">{title}</h3>
+      <p className="mt-1 text-sm text-primary/70">{description}</p>
+    </div>
+  );
+}
+
+function EventPreview() {
+  return (
+    <div className="rounded-lg border border-primary/10 bg-highlight-light p-3">
+      <p className="text-xs font-semibold text-primary">Produktlaunch Q3</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <span className="rounded bg-white px-2 py-0.5 text-[10px] text-primary/70 shadow-sm">
+          Marketingkampagne
+        </span>
+        <span className="rounded bg-white px-2 py-0.5 text-[10px] text-primary/70 shadow-sm">
+          Website Relaunch
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function EditPreview() {
+  return (
+    <div className="rounded-lg border border-primary/10 bg-highlight-light p-3">
+      <div className="h-2 w-3/4 rounded bg-white shadow-sm" />
+      <div className="mt-1.5 h-2 w-1/2 rounded bg-white shadow-sm" />
+      <span className="mt-2 inline-block rounded bg-primary px-2 py-0.5 text-[10px] text-white">
+        Speichern
+      </span>
+    </div>
+  );
+}
+
+function ConfirmPreview() {
+  return (
+    <div className="rounded-lg border border-primary/10 bg-highlight-light p-3 text-center">
+      <p className="text-[10px] font-medium text-primary">„Event" löschen?</p>
+      <div className="mt-2 flex justify-center gap-1.5">
+        <span className="rounded bg-white px-2 py-0.5 text-[10px] text-primary/70 shadow-sm">
+          Abbrechen
+        </span>
+        <span className="rounded bg-secondary px-2 py-0.5 text-[10px] text-white">Löschen</span>
+      </div>
+    </div>
+  );
+}
+
+function ReminderPreview() {
+  return (
+    <div className="rounded-lg border border-primary/10 bg-highlight-light p-3">
+      <div className="flex items-center gap-2">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs">
+          🔔
+        </span>
+        <p className="text-[10px] text-primary/80">Fällig in 3 Tagen</p>
+      </div>
+    </div>
   );
 }

@@ -166,4 +166,20 @@ notif.service.js:
 	privat: assertValidSubscription(), subscribeToPush()
 
 Welches Modul wäre am einfachsten zu extrahieren, wenn man es irgendwann als eigenen Service deployen müsste?
-	Notification wäre am einfachsten zu extrahieren. Keine andere Route braucht Notif synchron im Request-Pfad. Würde also diese ausfallen, funktioniert der Rest der App unverändert weiter, nur ohne Erinnerungen. Notif hat die kleinste Oberfläche; unteranderem, da sie keine Ownership-Verschachtelungen hat. 
+	Notification wäre am einfachsten zu extrahieren. Keine andere Route braucht Notif synchron im Request-Pfad. Würde also diese ausfallen, funktioniert der Rest der App unverändert weiter, nur ohne Erinnerungen. Notif hat die kleinste Oberfläche; unteranderem, da sie keine Ownership-Verschachtelungen hat.
+
+Session 12:
+Sicherheitsscan:
+Sensitive Token Exposure in URL Query Parameter (Magic Link) - mailer.js
+	  The application implements a magic link login mechanism where a short-lived JWT (sessionToken) is appended to the URL as a query parameter (?token=...). When the user clicks this link, the browser makes a GET request to the backend, which then redirects them to the frontend. Because the token is in the URL query string, it is highly susceptible to exposure. It will be recorded in server access logs, browser history, and potentially leaked to third-party sites via the Referer header if the destination page loads external assets. Since the JWT is stateless and valid for 15 minutes, any leaked token can be reused by an attacker to hijack the user's session.
+
+bcrypt hash detected - Auth.service.js
+
+Cost Amplification / Denial of Wallet via Unrated-Limited Registration Endpoint Triggering Welcome Emails - server.js
+	The /api/Auth/register endpoint is publicly accessible and does not implement any rate limiting or CAPTCHA protection. Upon successful registration, the backend automatically calls sendWelcomeEmail, which utilizes the third-party metered service Resend (as seen in package.json). An attacker can easily automate registration requests with arbitrary email addresses, leading to rapid exhaustion of the Resend API quota and significant financial costs (Denial of Wallet).
+
+Lighthouse:
+Performance: 96
+Accessibility: 95
+Best Practices: 100
+SEO: 100
