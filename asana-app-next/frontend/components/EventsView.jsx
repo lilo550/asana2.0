@@ -135,7 +135,7 @@ export default function EventsView({ initialEvents, apiUrl }) {
   return (
     <div>
       {!error && (
-        <div className="mb-6 text-sm text-primary/70">
+        <div className="mb-6 text-base text-primary/70">
           {events.length} Events · {totalProjects} Projekte
         </div>
       )}

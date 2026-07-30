@@ -1,0 +1,20 @@
+{
+  "name": "asana-app-next",
+  "private": true,
+  "description": "Orchestriert Frontend, Backend und Datenbank-Migrationen von asana-app-next ueber einen einzigen Befehl.",
+  "scripts": {
+    "postinstall": "npm run install:all",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "db:migrate": "npm run db:migrate --prefix backend",
+    "backend": "npm run dev --prefix backend",
+    "frontend": "npm run dev --prefix frontend",
+    "all": "npm run db:migrate && concurrently -n backend,frontend -c blue,magenta \"npm:backend\" \"npm:frontend\"",
+    "test": "npm test --prefix backend && npm test --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "react-icons": "^5.7.0"
+  }
+}

@@ -66,6 +66,11 @@ export function getCurrentUser(apiUrl) {
   return request(apiUrl, "/api/Auth/Me");
 }
 
+// Loescht das eigene Konto unwiderruflich (inkl. aller Events/Projekte).
+export function deleteAccount(apiUrl) {
+  return request(apiUrl, "/api/Auth/Me", { method: "DELETE" });
+}
+
 // --- Web Push ---
 
 export function getPushPublicKey(apiUrl) {

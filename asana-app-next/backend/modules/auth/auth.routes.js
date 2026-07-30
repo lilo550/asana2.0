@@ -6,6 +6,7 @@ import {
   loginUser,
   exchangeSessionToken,
   getUserById,
+  deleteUser,
   ValidationError,
   ConflictError,
   InvalidCredentialsError,
@@ -103,6 +104,23 @@ router.get("/Me", authenticate, async (req, res) => {
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: "Fehler beim Laden des Nutzers" });
+  }
+});
+
+// Loescht das eigene Konto unwiderruflich (inkl. aller Events/Projekte, siehe
+// auth.service.js) und beendet die Session, da es den Nutzer danach nicht
+// mehr gibt.
+router.delete("/Me", authenticate, async (req, res) => {
+  try {
+    await deleteUser(req.user.userId);
+    res.clearCookie("token", COOKIE_OPTIONS);
+    res.status(204).send();
+  } catch (err) {
+    if (err.code === "P2025") {
+      res.clearCookie("token", COOKIE_OPTIONS);
+      return res.status(404).json({ error: "Nutzer nicht gefunden" });
+    }
+    res.status(500).json({ error: "Fehler beim Löschen des Kontos" });
   }
 });
 

@@ -1,7 +1,5 @@
-TEST_ACCOUNT
-  email: "test@example.com",
-  password: "test1234",
-  name: "Test User",
+Die Anwendung startet mit npm run all
+Alle Tests laufen mit npm test
 
 Session 2:
 Ich habe mich für Next.js entschieden, da der SEO Wert höher ist.
@@ -183,3 +181,6 @@ Performance: 96
 Accessibility: 95
 Best Practices: 100
 SEO: 100
+
+Backend: Code Coverage ≥ 80 % (gemessen mit Vitest + Coverage-Report)
+Frontend: Mindestens ein E2E-Test pro kritischem Pfad (Cypress)

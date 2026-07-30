@@ -46,11 +46,11 @@ export default async function DashboardPage() {
       <UserMenu apiUrl={API_URL} />
 
       <header className="mb-8">
-        <h1 data-cy="events-heading" className="text-3xl font-bold text-primary">
+        <h1 data-cy="events-heading" className="text-4xl font-bold text-primary">
           Meine Events
         </h1>
         <p className="mt-1 text-primary/70">
-          Behalte den Überblick über deine Events und deren Projekte.
+          Behalte den Überblick über deine Events.
         </p>
       </header>
 

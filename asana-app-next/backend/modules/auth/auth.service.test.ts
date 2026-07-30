@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // sendWelcomeEmail direkt aus diesen Dateien.
 vi.mock("../../prismaClient.js", () => ({
   prisma: {
-    user: { findUnique: vi.fn(), create: vi.fn() },
+    user: { findUnique: vi.fn(), create: vi.fn(), delete: vi.fn() },
   },
 }));
 
@@ -27,6 +27,7 @@ import {
   exchangeSessionToken,
   createSessionToken,
   getUserById,
+  deleteUser,
   ValidationError,
   ConflictError,
   InvalidCredentialsError,
@@ -211,5 +212,26 @@ describe("getUserById", () => {
     const result = await getUserById(999);
 
     expect(result).toBeNull();
+  });
+});
+
+describe("deleteUser", () => {
+  beforeEach(() => {
+    vi.mocked(prisma.user.delete).mockReset();
+  });
+
+  it("Normalfall: loescht den Nutzer anhand seiner ID", async () => {
+    vi.mocked(prisma.user.delete).mockResolvedValue({ id: 5 } as never);
+
+    await deleteUser(5);
+
+    expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 5 } });
+  });
+
+  it("Fehlerfall: Prisma-Fehler (z.B. Nutzer existiert nicht mehr) wird durchgereicht", async () => {
+    const notFoundError = Object.assign(new Error("Record not found"), { code: "P2025" });
+    vi.mocked(prisma.user.delete).mockRejectedValue(notFoundError as never);
+
+    await expect(deleteUser(999)).rejects.toThrow("Record not found");
   });
 });

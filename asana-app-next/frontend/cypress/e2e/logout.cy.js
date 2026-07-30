@@ -17,6 +17,7 @@ describe("Logout", () => {
     cy.get('[data-cy="login-submit-button"]').click();
     cy.get('[data-cy="events-heading"]').should("be.visible");
 
+    cy.get('[data-cy="account-menu-button"]').click();
     cy.get('[data-cy="logout-button"]').click();
 
     cy.url().should("eq", `${Cypress.config("baseUrl")}/login`);

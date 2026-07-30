@@ -137,3 +137,11 @@ export async function getUserById(userId) {
     select: { id: true, email: true, name: true },
   });
 }
+
+// Loescht das Konto unwiderruflich. Events, Projekte (kaskadiert ueber Event)
+// und PushSubscriptions sind in schema.prisma auf onDelete: Cascade gesetzt,
+// gehen also mit weg - die DB uebernimmt das atomar, kein manuelles
+// Vorab-Loeschen der Events noetig.
+export async function deleteUser(userId) {
+  await prisma.user.delete({ where: { id: userId } });
+}

@@ -40,7 +40,7 @@ model Event {
   description String?
   date        DateTime?
   userId      Int
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   projects    Project[]
 
   @@map("events")
