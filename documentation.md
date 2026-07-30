@@ -182,5 +182,11 @@ Accessibility: 95
 Best Practices: 100
 SEO: 100
 
-Backend: Code Coverage ≥ 80 % (gemessen mit Vitest + Coverage-Report)
-Frontend: Mindestens ein E2E-Test pro kritischem Pfad (Cypress)
+Nach dem Durchlauf aller Aufgaben, habe ich noch folgende Funktionen hinzugefügt:
+- Eine Möglichkeit das Nutzerkonto zu löschen
+- Events und Projekte können als "erledigt" markiert werden
+
+Reflexion:
+Im Nachhinein würde ich meine App durch mehr Funktionen interaktiver gestalten. Ich würde die Darstellung der Events und Projekte noch einmal überdenken und eine Übersichtlichere Darstellung wählen. Momentan sind es zu viele Informationen auf einer Stelle.
+Bezüglich der Herangehensweise an Probleme würde ich keine Veränderung vornehmen.
+Am Ende war es nicht möglich noch einmal möglich die E2E-Tests laufen zu lassen, da cypress in meiner Umgebung kaputt gegangen ist. Ich habe nich geschafft herauszufinden, woran das liegt.

@@ -48,10 +48,12 @@ export async function findOwnedProject(projectId, eventId, userId) {
 
 // --- Events ---
 
+// Aufsteigend nach Datum sortiert, Events ohne Datum ans Ende.
 export async function listEvents(userId) {
   return prisma.event.findMany({
     where: { userId },
     include: { projects: true },
+    orderBy: { date: { sort: "asc", nulls: "last" } },
   });
 }
 
@@ -197,4 +199,54 @@ export async function deleteProject(eventId, projectId, userId) {
 
   await prisma.project.delete({ where: { id: existing.id } });
   return true;
+}
+
+// --- Erledigt-Status ---
+
+// Markiert ein eigenes Event als erledigt/nicht erledigt. Erledigt-Setzen
+// (done: true) ist nur erlaubt, wenn alle zugehoerigen Projekte bereits
+// erledigt sind (bei einem Event ohne Projekte ist das trivial erfuellt).
+// Zurueck auf "nicht erledigt" ist immer erlaubt. Gibt null zurueck, wenn
+// das Event nicht existiert oder nicht dem Nutzer gehoert.
+export async function setEventDone(id, userId, done) {
+  const owned = await getOwnedEvent(id, userId);
+  if (!owned) return null;
+
+  if (done && owned.projects.some((project) => !project.done)) {
+    throw new ValidationError(
+      "Alle Projekte müssen erledigt sein, bevor das Event als erledigt markiert werden kann"
+    );
+  }
+
+  return prisma.event.update({
+    where: { id: owned.id },
+    data: { done },
+    include: { projects: true },
+  });
+}
+
+// Markiert ein Projekt eines eigenen Events als erledigt/nicht erledigt.
+// Wird ein Projekt wieder auf "nicht erledigt" gesetzt, waehrend das
+// uebergeordnete Event bereits als erledigt markiert ist, wird das Event
+// automatisch mit zurueckgesetzt - sonst wuerde "Event erledigt" eine
+// Aussage treffen, die durch die Projekte nicht mehr gedeckt ist. Gibt null
+// zurueck, wenn das Projekt nicht existiert oder nicht (ueber das Event) dem
+// Nutzer gehoert.
+export async function setProjectDone(eventId, projectId, userId, done) {
+  const existing = await findOwnedProject(projectId, eventId, userId);
+  if (!existing) return null;
+
+  const project = await prisma.project.update({
+    where: { id: existing.id },
+    data: { done },
+  });
+
+  if (!done) {
+    await prisma.event.updateMany({
+      where: { id: eventId, done: true },
+      data: { done: false },
+    });
+  }
+
+  return project;
 }

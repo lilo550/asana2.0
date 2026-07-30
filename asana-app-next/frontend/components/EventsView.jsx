@@ -8,6 +8,17 @@ import * as api from "@/lib/api";
 
 const POLL_INTERVAL_MS = 10000;
 
+// Aufsteigend nach Datum, Events ohne Datum ans Ende. Der Backend-Endpoint
+// liefert bereits so sortiert, aber lokale Aenderungen (neues Event anlegen,
+// Datum bearbeiten) muessen bis zum naechsten Poll ebenfalls in der
+// richtigen Reihenfolge angezeigt werden.
+function compareByDate(a, b) {
+  if (!a.date && !b.date) return 0;
+  if (!a.date) return 1;
+  if (!b.date) return -1;
+  return new Date(a.date) - new Date(b.date);
+}
+
 export default function EventsView({ initialEvents, apiUrl }) {
   // initialEvents kommt bereits fertig geladen von der Server Component.
   const [events, setEvents] = useState(initialEvents);
@@ -81,6 +92,36 @@ export default function EventsView({ initialEvents, apiUrl }) {
     }
   }
 
+  async function handleToggleEventDone(eventId, done) {
+    try {
+      const updated = await api.setEventDone(apiUrl, eventId, done);
+      setEvents((prev) => prev.map((e) => (e.id === eventId ? { ...e, ...updated } : e)));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleToggleProjectDone(eventId, projectId, done) {
+    try {
+      const updatedProject = await api.setProjectDone(apiUrl, eventId, projectId, done);
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === eventId
+            ? {
+                // Spiegelt das Server-Verhalten: wird ein Projekt wieder
+                // geoeffnet, kann das Event nicht laenger "erledigt" sein.
+                ...e,
+                done: done ? e.done : false,
+                projects: e.projects.map((p) => (p.id === projectId ? updatedProject : p)),
+              }
+            : e
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   // --- Löschen mit Bestätigung ---------------------------------------
   // Diese Funktionen öffnen nur den Bestätigungsdialog. Die eigentliche
   // Löschung passiert erst in confirmDelete(), nach Bestätigung durch den Nutzer.
@@ -131,12 +172,13 @@ export default function EventsView({ initialEvents, apiUrl }) {
   }
 
   const totalProjects = events.reduce((sum, e) => sum + e.projects.length, 0);
+  const sortedEvents = [...events].sort(compareByDate);
 
   return (
     <div>
       {!error && (
         <div className="mb-6 text-base text-primary/70">
-          {events.length} Events · {totalProjects} Projekte
+          {events.length} Events
         </div>
       )}
 
@@ -152,7 +194,7 @@ export default function EventsView({ initialEvents, apiUrl }) {
         <p className="text-primary/60">Noch keine Events vorhanden. Lege dein erstes Event an!</p>
       ) : (
         <div className="space-y-5">
-          {events.map((event) => (
+          {sortedEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
@@ -160,11 +202,15 @@ export default function EventsView({ initialEvents, apiUrl }) {
                 handleUpdateEvent(event.id, name, description, date)
               }
               onDeleteEvent={() => requestDeleteEvent(event.id)}
+              onToggleEventDone={(done) => handleToggleEventDone(event.id, done)}
               onAddProject={(name, description) => handleAddProject(event.id, name, description)}
               onUpdateProject={(projectId, name, description) =>
                 handleUpdateProject(event.id, projectId, name, description)
               }
               onDeleteProject={(projectId) => requestDeleteProject(event.id, projectId)}
+              onToggleProjectDone={(projectId, done) =>
+                handleToggleProjectDone(event.id, projectId, done)
+              }
             />
           ))}
         </div>

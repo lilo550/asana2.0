@@ -108,6 +108,13 @@ export function deleteEvent(apiUrl, eventId) {
   return request(apiUrl, `/api/events/${eventId}`, { method: "DELETE" });
 }
 
+export function setEventDone(apiUrl, eventId, done) {
+  return request(apiUrl, `/api/events/${eventId}/done`, {
+    method: "PATCH",
+    body: JSON.stringify({ done }),
+  });
+}
+
 // --- Projekte ---
 
 export function createProject(apiUrl, eventId, { name, description }) {
@@ -127,5 +134,12 @@ export function updateProject(apiUrl, eventId, projectId, { name, description })
 export function deleteProject(apiUrl, eventId, projectId) {
   return request(apiUrl, `/api/events/${eventId}/projects/${projectId}`, {
     method: "DELETE",
+  });
+}
+
+export function setProjectDone(apiUrl, eventId, projectId, done) {
+  return request(apiUrl, `/api/events/${eventId}/projects/${projectId}/done`, {
+    method: "PATCH",
+    body: JSON.stringify({ done }),
   });
 }

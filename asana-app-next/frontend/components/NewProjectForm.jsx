@@ -21,6 +21,7 @@ export default function NewProjectForm({ onCreate }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
+        data-cy="new-project-open-button"
         className="w-full rounded-md border border-dashed border-primary/30 py-2 text-base font-medium text-primary hover:border-secondary hover:text-secondary"
       >
         + Projekt hinzufügen
@@ -38,6 +39,7 @@ export default function NewProjectForm({ onCreate }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="Projektname"
           autoFocus
+          data-cy="new-project-name-input"
           className="w-full rounded-md border border-primary/20 px-2 py-1.5 text-xs focus:border-secondary focus:outline-none"
         />
       </div>
@@ -48,6 +50,7 @@ export default function NewProjectForm({ onCreate }) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Beschreibung"
           rows={2}
+          data-cy="new-project-description-input"
           className="w-full rounded-md border border-primary/20 px-2 py-1.5 text-xs focus:border-secondary focus:outline-none"
         />
       </div>
@@ -55,12 +58,14 @@ export default function NewProjectForm({ onCreate }) {
         <button
           type="button"
           onClick={() => setOpen(false)}
+          data-cy="new-project-cancel-button"
           className="rounded-md border border-primary/20 px-3 py-1.5 text-base font-medium text-white hover:bg-primary-light"
         >
           Abbrechen
         </button>
         <button
           type="submit"
+          data-cy="new-project-submit-button"
           className="rounded-md bg-primary-light px-3 py-1.5 text-base font-medium text-white hover:bg-primary-dark"
         >
           Hinzufügen

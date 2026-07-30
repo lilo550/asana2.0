@@ -9,6 +9,8 @@ import {
   addProject,
   updateProject,
   deleteProject,
+  setEventDone,
+  setProjectDone,
   ValidationError,
 } from "./events.service.js";
 
@@ -116,6 +118,25 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Erledigt-Status eines eigenen Events setzen
+router.patch("/:id/done", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) return res.status(400).json({ error: "Ungültige Event-ID" });
+
+  const { done } = req.body;
+  if (typeof done !== "boolean") {
+    return res.status(400).json({ error: "done muss ein boolescher Wert sein" });
+  }
+
+  try {
+    const event = await setEventDone(id, req.user.userId, done);
+    if (!event) return res.status(404).json({ error: "Event nicht gefunden" });
+    res.json(event);
+  } catch (err) {
+    sendServiceError(res, err, "Fehler beim Aktualisieren des Erledigt-Status");
+  }
+});
+
 // --- Projekte (gehoeren zu einem Event) ---
 
 // Neues Projekt zu einem eigenen Event hinzufuegen
@@ -167,6 +188,28 @@ router.delete("/:id/projects/:projectId", async (req, res) => {
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: "Fehler beim Löschen des Projekts" });
+  }
+});
+
+// Erledigt-Status eines Projekts setzen
+router.patch("/:id/projects/:projectId/done", async (req, res) => {
+  const id = parseId(req.params.id);
+  const projectId = parseId(req.params.projectId);
+  if (id === null || projectId === null) {
+    return res.status(400).json({ error: "Ungültige ID" });
+  }
+
+  const { done } = req.body;
+  if (typeof done !== "boolean") {
+    return res.status(400).json({ error: "done muss ein boolescher Wert sein" });
+  }
+
+  try {
+    const project = await setProjectDone(id, projectId, req.user.userId, done);
+    if (!project) return res.status(404).json({ error: "Projekt nicht gefunden" });
+    res.json(project);
+  } catch (err) {
+    sendServiceError(res, err, "Fehler beim Aktualisieren des Erledigt-Status");
   }
 });
 
